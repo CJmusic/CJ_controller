@@ -49,7 +49,7 @@ from consts import *
 mixer = None
 
 
-class nocturn_CZ(ControlSurface):
+class CJ_controller(ControlSurface):
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)
         self._device_selection_follows_track_selection = True

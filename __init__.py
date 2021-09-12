@@ -1,4 +1,4 @@
-from nocturn_CZ import nocturn_CZ
+from CJ_controller import CJ_controller
 
 def create_instance(c_instance):
-    return nocturn_CZ(c_instance)
+    return CJ_controller(c_instance)
