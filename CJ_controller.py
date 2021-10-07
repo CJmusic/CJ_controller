@@ -29,7 +29,6 @@ from _Framework.ControlSurface import ControlSurface
 from _Framework.InputControlElement import *
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
-from ConfigurableButtonElement import ConfigurableButtonElement
 from _Framework.SessionComponent import SessionComponent
 from _Framework.TransportComponent import TransportComponent
 from _Framework.DeviceComponent import DeviceComponent
@@ -39,13 +38,14 @@ from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from _Framework.ChannelStripComponent import ChannelStripComponent
 from _APC.DetailViewCntrlComponent import DetailViewCntrlComponent
 
-from DeviceNavComponent import DeviceNavComponent
-from TrackControllerComponent import TrackControllerComponent
+from ._modules.ConfigurableButtonElement import ConfigurableButtonElement
+from ._modules.DeviceNavComponent import DeviceNavComponent
+from ._modules.TrackControllerComponent import TrackControllerComponent
 
 
 from _Framework.MixerComponent import MixerComponent # Class encompassing several channel strips to form a mixer
 from _Framework.SliderElement import SliderElement # Class representing a slider on the controller
-from consts import *
+from .consts import *
 mixer = None
 
 
@@ -58,17 +58,13 @@ class CJ_controller(ControlSurface):
             self._suppress_session_highlight = True
             self._control_is_with_automap = False
             is_momentary = True
-            self._suggested_input_port = 'Akai MPK26'
-            self._suggested_output_port = 'Akai MPK26'
-            self.log("BEFORE mixer")
+            self._suggested_input_port = ''
+            self._suggested_output_port = ''
+            self._setup_session_control()
             self._setup_mixer_control()
             self._setup_device_control()
 
-
-            # self.clipcontrol(8)
-
-            self.log("AFTER MIXER")
-            """SESSION ViEW"""
+    def _setup_session_control(self):
             global session
             session = SessionComponent(GRIDSIZE[0],GRIDSIZE[1])
             session.name = 'Session_Control'
@@ -82,22 +78,15 @@ class CJ_controller(ControlSurface):
             session.set_scene_bank_buttons(down_button, up_button)
             session.set_track_bank_buttons(right_button, left_button)
 
-            # session_zoom = SessionZoomingComponent(session)
-            # session_zoom.set_nav_buttons(up_button,down_button,left_button,right_button)
             session_stop_buttons = []
-            self.log("SETTING UP GRID")
-            for row in xrange(GRIDSIZE[1]):
+            for row in range(GRIDSIZE[1]):
                 button_row = []
-                self.log("CZ ROW")
-                self.log(str(row))
                 scene = session.scene(row)
                 scene.name = 'Scene_' + str(row)
                 scene.set_launch_button(ButtonElement(True, MIDI_NOTE_TYPE, CHANNEL, SCENE_BUTTONS[row]))
                 scene.set_triggered_value(2)
 
-                for column in xrange(GRIDSIZE[0]):
-                    self.log("CZ COLUMN")
-                    self.log(str(column))
+                for column in range(GRIDSIZE[0]):
                     button = ConfigurableButtonElement(True, MIDI_NOTE_TYPE, CHANNEL_MIXER, LAUNCH_BUTTONS[row][column])
                     button.name = str(column) + '_Clip_' + str(row) + '_Button'
                     button_row.append(button)
@@ -107,7 +96,7 @@ class CJ_controller(ControlSurface):
 
                 matrix.add_row(tuple(button_row))
 
-            for column in xrange(GRIDSIZE[0]):
+            for column in range(GRIDSIZE[0]):
                 session_stop_buttons.append((ButtonElement(True, MIDI_NOTE_TYPE, CHANNEL_MIXER, TRACK_STOPS[column])))
 
             self._suppress_session_highlight = False
@@ -117,8 +106,9 @@ class CJ_controller(ControlSurface):
             session.set_mixer(mixer)
 
 
-    def log(self, message):
-        sys.stderr.write("LOG: " + message.encode("utf-8"))
+    def _set_session_highlight(self, track_offset, scene_offset, width, height, include_return_tracks):
+        if not self._suppress_session_highlight:
+            ControlSurface._set_session_highlight(self, track_offset, scene_offset, width, height, include_return_tracks)
 
 
     def _setup_mixer_control(self):
@@ -132,9 +122,8 @@ class CJ_controller(ControlSurface):
         master.set_volume_control(SliderElement(MIDI_CC_TYPE, CHANNEL_USER, MASTER_VOLUME))
         mixer.set_prehear_volume_control(SliderElement(MIDI_CC_TYPE, CHANNEL_USER, PREHEAR))
 
-        for index in xrange(GRIDSIZE[0]):
+        for index in range(GRIDSIZE[0]):
             mixer.channel_strip(index).set_volume_control(SliderElement(MIDI_CC_TYPE, CHANNEL_MIXER, MIX_FADERS[index]))
-            # mixer.channel_strip(index).set_volume_control(SliderElement(MIDI_CC_TYPE, CHANNEL_INST, MIX_FADERS[index]))
             mixer.channel_strip(index).set_pan_control(SliderElement(MIDI_CC_TYPE, CHANNEL_MIXER, PAN_CONTROLS[index]))
             mixer.channel_strip(index).set_arm_button(ButtonElement(True, MIDI_CC_TYPE, CHANNEL_INST, ARM_BUTTONS[index])) #sets the record arm button
             mixer.channel_strip(index).set_solo_button(ButtonElement(True, MIDI_CC_TYPE, CHANNEL_INST, SOLO_BUTTONS[index]))
@@ -145,10 +134,6 @@ class CJ_controller(ControlSurface):
                                                               SliderElement(MIDI_CC_TYPE, CHANNEL_MIXER, SEND_CONTROLS[index][2]),
                                                               SliderElement(MIDI_CC_TYPE, CHANNEL_MIXER, SEND_CONTROLS[index][3])])
 
-
-
-
-        """TRANSPORT CONTROLS"""
         stop_button = ButtonElement(False, MIDI_CC_TYPE, CHANNEL_MIXER, STOP_BUTTON)
         play_button = ButtonElement(False, MIDI_CC_TYPE, CHANNEL_MIXER, PLAY_BUTTON)
         record_button = ButtonElement(False,MIDI_CC_TYPE,CHANNEL_MIXER,RECORD_BUTTON)
@@ -189,18 +174,7 @@ class CJ_controller(ControlSurface):
         self._device.set_bank_next_button(up_bank_button)
 
 
-        # self._track_controller = self.register_component(TrackControllerComponent(control_surface = ControlSurface, implicit_arm = False))
-        # self.set_next_track_button(ButtonElement()) 
-        # self.set_next_track_button(ButtonElement())
-        
-
-
-
-    def _set_session_highlight(self, track_offset, scene_offset, width, height, include_return_tracks):
-        if not self._suppress_session_highlight:
-            ControlSurface._set_session_highlight(self, track_offset, scene_offset, width, height, include_return_tracks)
 
     def disconnect(self):
-        """clean things up on disconnect"""
         ControlSurface.disconnect(self)
         return None
