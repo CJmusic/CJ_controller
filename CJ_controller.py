@@ -1,8 +1,7 @@
 # --------------------------------------------------- #
 '''
 
-MPK25 control script for ableton Live, written by Christopher Zaworski
-Based of my script for the MPD26
+Midi Remote control script for ableton Live, written by Chris Joseph
 
 
 special credits to Alzy (Seppe?), his original script can be found at
