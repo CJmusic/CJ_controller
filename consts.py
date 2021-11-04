@@ -2,8 +2,7 @@
 
 '''
 This file is for setting what midi controls to use for each feature
-with the control script. Currently this is the setup I use for my Akai
-MPD 26.
+with the control script. Currently this is the setup I use for my Novation Nocturn.
 
 It can easily be adapted to use with other MIDI controllers:
 
